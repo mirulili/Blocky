@@ -35,11 +35,10 @@ struct ImgPicker: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.delegate = context.coordinator
-        picker.sourceType = .photoLibrary // 또는 .camera 로 설정
+        picker.sourceType = .photoLibrary // .camera
         return picker
     }
     
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
-        // 업데이트 로직 필요 없음
     }
 }

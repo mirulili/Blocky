@@ -1,0 +1,31 @@
+# macOS
+#################
+.DS_Store
+
+# Xcode
+#################
+## Build generated
+build/
+Build/
+DerivedData/
+
+## Various settings
+*.xcodeproj/project.xcworkspace
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+## Generated files
+*.app
+*.ipa
+
+# Swift Package Manager
+#################
+.build/
+Packages/
+
+# Test Folders & Files
+#################
+BlockyTests/
+BlockyUITests/
+*.xctestrun
+*.xcresult

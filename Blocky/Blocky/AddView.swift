@@ -16,7 +16,7 @@ struct AddView: View {
     
     var body: some View {
         VStack {
-            // 사진 영역 (탭 시 갤러리 열림)
+            // Photo area (opens gallery on tap)
             ZStack {
                 if let photo = photo {
                     Image(uiImage: photo)
@@ -30,6 +30,7 @@ struct AddView: View {
                                 .font(.system(size: 40))
                                 .foregroundColor(.gray)
                         )
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
             }
             .frame(height: 300)
@@ -38,7 +39,7 @@ struct AddView: View {
                 showImagePicker = true
             }
             
-            // 설명 입력란
+            // Description input field
             TextEditor(text: $descriptionText)
                 .frame(height: 120)
                 .padding()
@@ -47,30 +48,54 @@ struct AddView: View {
                 .focused($isFocused)
                 .padding(.horizontal)
             
-            // 저장 버튼
-            if photo != nil {
-                Button("완료") {
-                    if let image = photo {
-                        photoStore.savePhoto(image, for: selectedDate, with: descriptionText)
+            // Button area
+            VStack {
+                // Save button
+                if photo != nil {
+                    Button("완료") {
+                        photoStore.savePhoto(photo!, for: selectedDate, with: descriptionText)
                         isFocused = false
                         dismiss()
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
-                .padding(.top)
+                
+                // Delete button (only shown if a photo already exists)
+                if photoStore.getPhotoData(for: selectedDate) != nil {
+                    Button("삭제") {
+                        photoStore.deletePhoto(for: selectedDate)
+                        dismiss()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
             }
+            .padding(.top)
+            .padding(.horizontal)
             
             Spacer()
         }
-        .padding()
         .navigationTitle("사진 추가")
         .sheet(isPresented: $showImagePicker) {
             ImgPicker(image: $photo)
         }
-        .background(
-            Color.white
-                .onTapGesture {
-                    isFocused = false
-                }
-        )
+        .onAppear(perform: loadData)
+        .contentShape(Rectangle()) // Added to recognize tap gestures on the entire area
+        .onTapGesture {
+            isFocused = false
+        }
+    }
+    
+    private func loadData() {
+        guard let data = photoStore.getPhotoData(for: selectedDate) else { return }
+        descriptionText = data.description
+        photo = photoStore.loadImage(from: data.filename)
     }
 }
