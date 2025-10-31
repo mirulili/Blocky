@@ -9,7 +9,7 @@ build/
 Build/
 DerivedData/
 
-## Various settings
+## Some settings
 *.xcodeproj/project.xcworkspace
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
