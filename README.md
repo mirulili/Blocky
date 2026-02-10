@@ -21,14 +21,14 @@ A simple and intuitive photo diary app. "Blocky" allows you to save one photo pe
 
 ## 🚀 How to Get Started
 
-1.  Clone the repository.
-2.  Open `Blocky.xcodeproj` in Xcode.
-3.  Select a simulator or a physical device.
-4.  Build and run the project (Cmd + R).
+1. Clone the repository.
+2. Open `Blocky.xcodeproj` in Xcode.
+3. Select a simulator or a physical device.
+4. Build and run the project (Cmd + R).
 
 ## 📝 Upcoming Features
 
-(Last updated: October 31, 2025)
+(Last updated: February 10, 2026)
 
 - Display a special indicator for today's date on the calendar.
 - Introduce different color themes for the app.
@@ -36,4 +36,4 @@ A simple and intuitive photo diary app. "Blocky" allows you to save one photo pe
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed. See the `LICENSE` file for details.

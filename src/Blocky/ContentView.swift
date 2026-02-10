@@ -10,41 +10,97 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var photoStore: PhotoStore
     @State private var displayDate: Date = Date()
+    @State private var selectedDate: Date = Date()
+    @State private var navigateToDetail = false
     
     private let calendar = Calendar.current
-    private let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 5), count: 7) // Reduced spacing
     
     var body: some View {
         NavigationView {
-            VStack {
+            VStack(spacing: 30) {
+                // Header
                 CalendarHeader(displayDate: $displayDate)
+                    .padding(.bottom, 20)
+                    .padding(.top, 20)
+                    .padding(.horizontal, 10)
                 
-                LazyVGrid(columns: columns, spacing: 2) {
-                    ForEach(daysOfWeek, id: \.self) { day in
+                // Weekday Headers
+                HStack(spacing: 0) {
+                    ForEach(Array(daysOfWeek.enumerated()), id: \.offset) { index, day in
                         Text(day)
-                            .font(.caption)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(textColor(for: index))
                             .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(.bottom, 5)
+                .padding(.bottom, 10)
+                .padding(.horizontal, 10)
                 
-                LazyVGrid(columns: columns, spacing: 2) {
+                // Calendar Grid
+                LazyVGrid(columns: columns, spacing: 5) { // Reduced spacing
                     ForEach(fetchDates(), id: \.self) { date in
-                        NavigationLink(destination: PhotoDetailView(selectedDate: date.date)) {
-                            DateCell(date: date)
+                         if date.isCurrentMonth {
+                            Button(action: {
+                                selectedDate = date.date
+                            }) {
+                                DateCell(date: date, isSelected: calendar.isDate(date.date, inSameDayAs: selectedDate))
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        } else {
+                            Color.clear
+                                .aspectRatio(9.0/16.0, contentMode: .fit)
                         }
                     }
                 }
+                .padding(.horizontal, 10)
                 
                 Spacer()
+                
+                // Footer
+                HStack {
+                    HStack {
+                        Text("\(formatDate(selectedDate))")
+                            .font(.callout)
+                            .foregroundColor(.blue)
+                            .padding(.leading, 20)
+                        
+                        
+                        // Navigation Link Button
+                        NavigationLink(destination: PhotoDetailView(selectedDate: selectedDate), isActive: $navigateToDetail) {
+                            Button(action: {
+                                navigateToDetail = true
+                            }) {
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.title3)
+                            }
+                        }
+                    }
+                    Spacer()
+                }
+                .padding()
+                .background(Color(uiColor: .systemBackground))
             }
-            .padding(.horizontal, 8)
-            .navigationBarHidden(true) // Hide the default navigation bar title because we use a custom header
+            .navigationBarHidden(true)
+            .background(Color(uiColor: .systemGray6).edgesIgnoringSafeArea(.all))
         }
     }
     
     private var daysOfWeek: [String] {
         ["일", "월", "화", "수", "목", "금", "토"]
+    }
+    
+    private func textColor(for index: Int) -> Color {
+        if index == 0 { return .red }
+        if index == 6 { return .blue }
+        return .primary
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M월 d일"
+        return formatter.string(from: date)
     }
     
     private func fetchDates() -> [DateValue] {
@@ -70,9 +126,10 @@ struct ContentView: View {
         }
         
         // Dates for the next month (padding)
-        let remainingDays = 42 - dates.count // Based on a 6-week (42-day) grid
+        let totalCells = dates.count
+        let remainingDays = (7 - (totalCells % 7)) % 7
         if remainingDays > 0 {
-            for i in 1...remainingDays {
+             for i in 1...remainingDays {
                 let date = calendar.date(byAdding: .day, value: i, to: dates.last!.date)!
                 dates.append(DateValue(day: calendar.component(.day, from: date), date: date, isCurrentMonth: false))
             }
@@ -84,64 +141,68 @@ struct ContentView: View {
 
 struct CalendarHeader: View {
     @Binding var displayDate: Date
-    @State private var showYearPicker = false
-    @State private var showMonthPicker = false
+    @State private var showDatePicker = false
     
     var body: some View {
         HStack {
-            HStack(spacing: 8) {
-                Text(yearString(from: displayDate))
-                    .onTapGesture { showYearPicker = true }
-                
-                Text(monthString(from: displayDate))
-                    .onTapGesture { showMonthPicker = true }
+            HStack(spacing: 4) {
+                 Text(dateString(from: displayDate))
+                    .font(.system(size: 24, weight: .bold)) // Larger, bold title
+                    .foregroundColor(.blue)
+                    .onTapGesture { showDatePicker = true }
             }
-            .font(.title)
-            .fontWeight(.bold)
-            .foregroundColor(.blue)
             
             Spacer()
             
-            Button("오늘") {
+            Button(action: {
                 displayDate = Date()
+            }) {
+                Text("오늘")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.blue)
+                    .clipShape(Capsule())
             }
-            .padding(.horizontal, 8)
             
-            Button(action: { changeMonth(by: -1) }) { Image(systemName: "chevron.left") }
-            
-            Button(action: { changeMonth(by: 1) }) { Image(systemName: "chevron.right") }
+            HStack(spacing: 15) {
+                Button(action: { changeMonth(by: -1) }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.gray)
+                }
+                
+                Button(action: { changeMonth(by: 1) }) {
+                     Image(systemName: "chevron.right")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.gray)
+                }
+            }
+            .padding(.leading, 10)
         }
-        .padding()
-        .sheet(isPresented: $showYearPicker) {
-            YearPickerView(displayDate: $displayDate, showPicker: $showYearPicker)
-                .presentationDetents([.height(250)]) // Adjust sheet height
-        }
-        .sheet(isPresented: $showMonthPicker) {
-            MonthPickerView(displayDate: $displayDate, showPicker: $showMonthPicker)
-                .presentationDetents([.height(250)]) // Adjust sheet height
+        .padding(.horizontal)
+        .padding(.top, 10)
+        .sheet(isPresented: $showDatePicker) {
+            YearMonthPickerView(displayDate: $displayDate, showPicker: $showDatePicker)
+                .presentationDetents([.height(300)])
         }
     }
     
-    private func yearString(from date: Date) -> String {
+    private func dateString(from date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "YYYY년"
+        formatter.dateFormat = "YYYY년 M월"
         return formatter.string(from: date)
     }
     
-    private func monthString(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M월"
-        return formatter.string(from: date)
-    }
-    
-    private func changeMonth(by amount: Int) {
+     private func changeMonth(by amount: Int) {
         if let newDate = Calendar.current.date(byAdding: .month, value: amount, to: displayDate) {
             displayDate = newDate
         }
     }
 }
 
-struct YearPickerView: View {
+struct YearMonthPickerView: View {
     @Binding var displayDate: Date
     @Binding var showPicker: Bool
     
@@ -149,68 +210,96 @@ struct YearPickerView: View {
     
     var body: some View {
         VStack {
-            Picker("연도 선택", selection: Binding(
-                get: { Calendar.current.component(.year, from: displayDate) },
-                set: { newYear in
-                    var components = Calendar.current.dateComponents([.year, .month, .day], from: displayDate)
-                    components.year = newYear
-                    displayDate = Calendar.current.date(from: components) ?? displayDate
+            HStack {
+                Picker("연도 선택", selection: Binding(
+                    get: { Calendar.current.component(.year, from: displayDate) },
+                    set: { newYear in
+                        var components = Calendar.current.dateComponents([.year, .month, .day], from: displayDate)
+                        components.year = newYear
+                        displayDate = Calendar.current.date(from: components) ?? displayDate
+                    }
+                )) {
+                    ForEach(Array(yearRange), id: \.self) { year in
+                        Text("\(String(year))년").tag(year)
+                    }
                 }
-            )) {
-                ForEach(Array(yearRange), id: \.self) { year in
-                    Text("\(String(year))년").tag(year)
+                .pickerStyle(.wheel)
+                .frame(width: 150)
+                .clipped()
+                
+                Picker("월 선택", selection: Binding(
+                    get: { Calendar.current.component(.month, from: displayDate) },
+                    set: { newMonth in
+                        var components = Calendar.current.dateComponents([.year, .month, .day], from: displayDate)
+                        components.month = newMonth
+                        displayDate = Calendar.current.date(from: components) ?? displayDate
+                    }
+                )) {
+                    ForEach(1...12, id: \.self) { month in
+                        Text("\(month)월").tag(month)
+                    }
                 }
+                .pickerStyle(.wheel)
+                .frame(width: 100)
+                .clipped()
             }
-            .pickerStyle(.wheel)
+            
             Button("완료") { showPicker = false }
                 .padding()
         }
     }
 }
 
-struct MonthPickerView: View {
-    @Binding var displayDate: Date
-    @Binding var showPicker: Bool
-    
-    var body: some View {
-        VStack {
-            MonthPicker(displayDate: $displayDate)
-            Button("완료") { showPicker = false }
-                .padding()
-        }
-    }
-}
 
 struct DateCell: View {
     @EnvironmentObject var photoStore: PhotoStore
     let date: DateValue
+    let isSelected: Bool
     
     var body: some View {
-        // Use a transparent view as a base to define the frame size first.
-        Color.clear
-            .aspectRatio(9.0 / 16.0, contentMode: .fit) // Change to 9:16 aspect ratio
-            .overlay(
-                ZStack(alignment: .topTrailing) {
-                    if let photoData = photoStore.getPhotoData(for: date.date),
-                       let image = photoStore.loadImage(from: photoData.filename) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } else {
-                        Rectangle().fill(Color.gray.opacity(0.1))
-                    }
-                    
-                    Text("\(date.day)")
-                        .font(.caption)
-                        .frame(width: 22, height: 22)
-                        .background(Circle().fill(Color.black.opacity(0.4)))
-                        .foregroundColor(.white)
-                        .padding(4)
-                        .opacity(date.isCurrentMonth ? 1 : 0) // Hide the number if it's not in the current month
+        GeometryReader { geometry in
+            ZStack(alignment: .bottom) {
+                // Background
+                if let photoData = photoStore.getPhotoData(for: date.date),
+                   let image = photoStore.loadImage(from: photoData.filename) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .clipped()
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(uiColor: .secondarySystemBackground)) // Light gray for empty
                 }
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .opacity(date.isCurrentMonth ? 1 : 0.3) // Dim if not in the current month
+                
+                // Border for selection
+                 if isSelected {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.blue, lineWidth: 3)
+                }
+                
+                // Date Number
+                Text("\(date.day)")
+                     .font(.system(size: 14, weight: .semibold)) // Smaller font
+                     .foregroundColor(hasImage ? .white : textColor(for: date.date))
+                     .shadow(color: hasImage ? .black.opacity(0.5) : .clear, radius: 2, x: 0, y: 1)
+                     .padding(6) // Padding from corners
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12)) // Clip everything to rounded rect including image
+            .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1) // Subtle shadow for depth
+        }
+        .aspectRatio(9.0/16.0, contentMode: .fit) // Enforce 9:16 aspect ratio
+    }
+    
+    private var hasImage: Bool {
+        photoStore.getPhotoData(for: date.date) != nil
+    }
+    
+    private func textColor(for date: Date) -> Color {
+        let weekday = Calendar.current.component(.weekday, from: date)
+        if weekday == 1 { return .red }
+        if weekday == 7 { return .blue }
+        return .primary
     }
 }
 
@@ -220,34 +309,7 @@ struct DateValue: Hashable {
     let isCurrentMonth: Bool
 }
 
-extension DateFormatter {
-    static var monthYear: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "YYYY년 M월"
-        return formatter
-    }
-}
-
-struct MonthPicker: View {
-    @Binding var displayDate: Date
-    
-    var body: some View {
-        Picker("월 선택", selection: Binding(
-            get: { Calendar.current.component(.month, from: displayDate) },
-            set: { newMonth in
-                var components = Calendar.current.dateComponents([.year, .month, .day], from: displayDate)
-                components.month = newMonth
-                displayDate = Calendar.current.date(from: components) ?? displayDate
-            }
-        )) {
-            ForEach(1...12, id: \.self) { month in
-                Text("\(month)월").tag(month)
-            }
-        }
-        .pickerStyle(.wheel)
-    }
-}
-
+// Preview
 #Preview {
     ContentView()
         .environmentObject(PhotoStore())

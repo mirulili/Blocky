@@ -14,7 +14,10 @@ struct PhotoDetailView: View {
                     .resizable()
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
+                    .padding(.horizontal, 20)
+                    .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    .frame(height: 300)
+                    .padding(.top, 20)
                 
                 Text(data.description)
                     .padding(.horizontal)
