@@ -2,6 +2,9 @@
 
 A simple and intuitive photo diary app. "Blocky" allows you to save one photo per day and view your memories in a clean, block-style calendar. Each day is a block, making your photo collection look like a personal visual journal.
 
+<img width="387" height="771" alt="image" src="https://github.com/user-attachments/assets/dc200aaf-2c26-473e-a0a3-d88d9d89e24d" />
+
+
 ## ✨ Key Features
 
 - **Visual Calendar**: View your photos organized in a monthly calendar format.
